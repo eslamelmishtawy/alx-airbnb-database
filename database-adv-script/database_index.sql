@@ -178,3 +178,84 @@ Query Patterns Optimized:
 - Message conversation retrieval
 - Review aggregations by property
 */
+
+-- ===============================
+-- PERFORMANCE TESTING WITH EXPLAIN ANALYZE
+-- ===============================
+
+-- Test 1: User authentication query performance
+-- Before index
+EXPLAIN ANALYZE
+SELECT user_id, first_name, last_name, role
+FROM User
+WHERE email = 'test@example.com';
+
+-- After adding idx_user_email index
+-- CREATE INDEX IF NOT EXISTS idx_user_email ON User(email);
+EXPLAIN ANALYZE
+SELECT user_id, first_name, last_name, role
+FROM User
+WHERE email = 'test@example.com';
+
+-- Test 2: Property search performance
+-- Before composite index
+EXPLAIN ANALYZE
+SELECT property_id, name, pricepernight
+FROM Property
+WHERE location LIKE '%New York%'
+AND pricepernight BETWEEN 100 AND 300;
+
+-- After adding idx_property_location_price index
+EXPLAIN ANALYZE
+SELECT property_id, name, pricepernight
+FROM Property
+WHERE location LIKE '%New York%'
+AND pricepernight BETWEEN 100 AND 300;
+
+-- Test 3: Booking availability check performance
+-- Before optimization
+EXPLAIN ANALYZE
+SELECT COUNT(*)
+FROM Booking
+WHERE property_id = 'sample-property-uuid'
+AND status IN ('confirmed', 'pending')
+AND start_date <= '2025-12-31'
+AND end_date >= '2025-09-01';
+
+-- After adding idx_booking_availability_optimized index
+EXPLAIN ANALYZE
+SELECT COUNT(*)
+FROM Booking
+WHERE property_id = 'sample-property-uuid'
+AND status IN ('confirmed', 'pending')
+AND start_date <= '2025-12-31'
+AND end_date >= '2025-09-01';
+
+-- Test 4: Complex JOIN query performance
+-- Before optimization
+EXPLAIN ANALYZE
+SELECT
+    u.first_name, u.last_name,
+    p.name AS property_name,
+    b.start_date, b.end_date
+FROM User u
+JOIN Booking b ON u.user_id = b.user_id
+JOIN Property p ON b.property_id = p.property_id
+WHERE u.role = 'guest'
+AND b.status = 'confirmed'
+ORDER BY b.created_at DESC
+LIMIT 100;
+
+-- After adding all relevant indexes
+EXPLAIN ANALYZE
+SELECT
+    u.first_name, u.last_name,
+    p.name AS property_name,
+    b.start_date, b.end_date
+FROM User u
+JOIN Booking b ON u.user_id = b.user_id
+JOIN Property p ON b.property_id = p.property_id
+WHERE u.role = 'guest'
+AND b.status = 'confirmed'
+ORDER BY b.created_at DESC
+LIMIT 100;
