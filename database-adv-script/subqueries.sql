@@ -14,7 +14,24 @@ FROM User u
 GROUP BY u.user_id, u.first_name, u.last_name, u.email, u.role
 ORDER BY total_bookings DESC, u.first_name;
 
--- Query 2: Rank properties based on total number of bookings using ROW_NUMBER
+-- Query 2: Find all properties where the average rating is greater than 4.0 using a subquery
+SELECT
+    p.property_id,
+    p.name AS property_name,
+    p.location,
+    p.pricepernight,
+    CONCAT(u.first_name, ' ', u.last_name) AS host_name
+FROM Property p
+    INNER JOIN User u ON p.host_id = u.user_id
+WHERE p.property_id IN (
+    SELECT r.property_id
+FROM Review r
+GROUP BY r.property_id
+HAVING AVG(r.rating) > 4.0
+)
+ORDER BY p.name;
+
+-- Query 3: Rank properties based on total number of bookings using ROW_NUMBER
 -- Using window function ROW_NUMBER() to rank properties
 SELECT
     p.property_id,
